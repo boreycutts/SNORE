@@ -15,8 +15,8 @@ public class Splash extends AppCompatActivity {
             @Override
             public void run()
             {
-                Intent sleepIntent = new Intent(Splash.this, Sleep.class);
-                startActivity(sleepIntent);
+                Intent homeIntent = new Intent(Splash.this, Home.class);
+                startActivity(homeIntent);
                 finish();
             }
         }, SPLASH_TIME_OUT);
