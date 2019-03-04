@@ -1,5 +1,7 @@
 package com.coreybutts.snore;
 
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -9,6 +11,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -45,6 +48,8 @@ public class Sleep extends BlunoLibrary {
     String a, s;
     boolean connected;
 
+    Button buttonCalibrate;
+
     TextView snoreScore;
     TextView apneaScore;
 
@@ -60,17 +65,6 @@ public class Sleep extends BlunoLibrary {
         //serialReceivedText=(TextView) findViewById(R.id.serialReveicedText);	//initial the EditText of the received data
         //serialSendText=(EditText) findViewById(R.id.serialSendText);			//initial the EditText of the sending data
 
-        buttonSerialSend = (Button) findViewById(R.id.buttonSerialSend);		//initial the button for sending the data
-        buttonSerialSend.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                // TODO Auto-generated method stub
-
-                serialSend("r");				//send the data to the BLUNO
-            }
-        });
-
         buttonScan = (Button) findViewById(R.id.buttonScan);					//initial the button for scanning the BLE device
         buttonScan.setOnClickListener(new View.OnClickListener() {
 
@@ -84,31 +78,7 @@ public class Sleep extends BlunoLibrary {
 
         /* MY STUFF *******************************************************************************/
 
-        mLinePlot =(GraphView) findViewById(R.id.linePlot);
-        xyValueArray_s = new ArrayList<>();
-        xySeries_s = new PointsGraphSeries<>();
-        xyValueArray_a = new ArrayList<>();
-        xySeries_a = new PointsGraphSeries<>();
 
-        count = 0;
-        mLinePlot.getViewport().setMinY(0);
-        mLinePlot.getViewport().setMaxY(100);
-        mLinePlot.getViewport().setYAxisBoundsManual(true);
-        mLinePlot.setBackgroundColor(Color.rgb(55, 71, 79));
-        mLinePlot.getGridLabelRenderer().setGridColor(Color.rgb(255,255,255));
-        mLinePlot.getGridLabelRenderer().setVerticalLabelsColor(Color.rgb(255,255,255));
-        mLinePlot.getGridLabelRenderer().setHorizontalLabelsColor(Color.rgb(255,255,255));
-        mLinePlot.getGridLabelRenderer().setHorizontalAxisTitle("Time");
-        mLinePlot.getGridLabelRenderer().setHorizontalAxisTitleColor(Color.rgb(255,255,255));
-        mLinePlot.getGridLabelRenderer().setVerticalAxisTitle("Score (%)");
-        mLinePlot.getGridLabelRenderer().setVerticalAxisTitleColor(Color.rgb(255,255,255));
-        mLinePlot.setTitle("Your Sleep History");
-        mLinePlot.setTitleColor(Color.rgb(255,255,255));
-
-        snoreScore = (TextView) findViewById(R.id.snoreScore);
-        apneaScore = (TextView) findViewById(R.id.apneaScore);
-
-        connected = false;
 
         if(ContextCompat.checkSelfPermission(Sleep.this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
         {
@@ -139,9 +109,6 @@ public class Sleep extends BlunoLibrary {
                 ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_COARSE_LOCATION}, ACCESS_COARSE_LOCATION_CODE);
             }
         }
-
-        //ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 1);
-
     }
 
     @Override
@@ -196,6 +163,11 @@ public class Sleep extends BlunoLibrary {
             case isConnected:
                 buttonScan.setText("Connected");
                 connected = true;
+                FragmentManager fragmentManager = getFragmentManager();
+                FragmentCalibrate fragmentCalibrate = new FragmentCalibrate();
+                FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                fragmentTransaction.replace(android.R.id.content, fragmentCalibrate);
+                fragmentTransaction.commit();
                 break;
             case isConnecting:
                 buttonScan.setText("Connecting");
@@ -203,7 +175,7 @@ public class Sleep extends BlunoLibrary {
             case isToScan:
                 if(connected)
                 {
-                    createPlot();
+                    //createPlot();
                 }
                 buttonScan.setText("Scan");
                 connected = false;
@@ -247,49 +219,6 @@ public class Sleep extends BlunoLibrary {
         {
 
         }
-		/*try
-		{
-			xySeries_s = new PointsGraphSeries<>();
-			xyValueArray_s = new ArrayList<>();
-
-			xySeries_a = new PointsGraphSeries<>();
-			xyValueArray_a = new ArrayList<>();
-
-			xyValueArray_s.add(new XYValue(count, Integer.parseInt(s)));
-			xyValueArray_a.add(new XYValue(count, Integer.parseInt(a)));
-
-			count++;
-			if(count > 20)
-			{
-				count = 0;
-				mLinePlot.removeAllSeries();
-			}
-
-			createPlot();
-		}
-		catch(Exception e)
-		{
-
-		}*/
-
-        // FFT Shit
-		/*try
-		{
-		data = theString.getBytes();
-		xySeries = new PointsGraphSeries<>();
-		xyValueArray = new ArrayList<>();
-		for(int i = 0; i < 20; i++)
-		{
-			xyValueArray.add(new XYValue(i, (int)data[i]));
-		}
-
-			createPlot();
-		}
-		catch(Exception e)
-		{
-
-		}
-		data = null;*/
     }
 
     private void createPlot()
@@ -379,6 +308,14 @@ public class Sleep extends BlunoLibrary {
             }
         }
         return array;
+    }
+
+    @Override
+    public void onBackPressed()
+    {
+        Intent homeIntent = new Intent(Sleep.this, Home.class);
+        startActivity(homeIntent);
+        finish();
     }
 
 }
