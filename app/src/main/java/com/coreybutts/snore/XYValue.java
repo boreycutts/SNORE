@@ -1,10 +1,12 @@
 package com.coreybutts.snore;
 
+import java.io.Serializable;
+
 /**
  * Created by Borey on 2/14/2019.
  */
 
-public class XYValue
+public class XYValue implements Serializable
 {
     private double x;
     private double y;

@@ -11,6 +11,7 @@ public class FragmentScan extends Fragment
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
+        ((Sleep) getActivity()).scanning = true;
         return inflater.inflate(R.layout.fragment_scan, container, false);
     }
 }

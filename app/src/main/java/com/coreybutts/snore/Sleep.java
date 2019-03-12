@@ -21,11 +21,15 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.PointsGraphSeries;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Calendar;
+
 import android.Manifest;
 import android.widget.Toast;
 
@@ -38,20 +42,24 @@ public class Sleep extends BlunoLibrary {
     /* MY STUFF ***********************************************************************************/
     private int ACCESS_COARSE_LOCATION_CODE = 1;
 
-    PointsGraphSeries<DataPoint> xySeries_s;
-    PointsGraphSeries<DataPoint> xySeries_a;
-    GraphView mLinePlot;
+
     ArrayList<XYValue> xyValueArray_s;
     ArrayList<XYValue> xyValueArray_a;
     int count;
     byte[] data;
     String a, s;
     boolean connected;
+    public boolean scanning = false, calibrating = false, calibrationStarted = false, measuring = false, measureStart = false;
 
     Button buttonCalibrate;
 
     TextView snoreScore;
     TextView apneaScore;
+
+    FragmentCalibrate fragmentCalibrate = new FragmentCalibrate();
+    FragmentMeasure fragmentMeasure = new FragmentMeasure();
+
+    DatabaseHelper mDatabaseHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,13 +67,9 @@ public class Sleep extends BlunoLibrary {
         setContentView(R.layout.activity_sleep);
         onCreateProcess();														//onCreate Process by BlunoLibrary
 
-
         serialBegin(115200);													//set the Uart Baudrate on BLE chip to 115200
 
-        //serialReceivedText=(TextView) findViewById(R.id.serialReveicedText);	//initial the EditText of the received data
-        //serialSendText=(EditText) findViewById(R.id.serialSendText);			//initial the EditText of the sending data
-
-        buttonScan = (Button) findViewById(R.id.buttonScan);					//initial the button for scanning the BLE device
+        buttonScan = (Button) findViewById(R.id.button_scan);					//initial the button for scanning the BLE device
         buttonScan.setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -77,8 +81,8 @@ public class Sleep extends BlunoLibrary {
         });
 
         /* MY STUFF *******************************************************************************/
-
-
+        xyValueArray_s = new ArrayList<>();
+        xyValueArray_a = new ArrayList<>();
 
         if(ContextCompat.checkSelfPermission(Sleep.this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
         {
@@ -109,6 +113,9 @@ public class Sleep extends BlunoLibrary {
                 ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_COARSE_LOCATION}, ACCESS_COARSE_LOCATION_CODE);
             }
         }
+
+        mDatabaseHelper = new DatabaseHelper(this);
+
     }
 
     @Override
@@ -164,7 +171,7 @@ public class Sleep extends BlunoLibrary {
                 buttonScan.setText("Connected");
                 connected = true;
                 FragmentManager fragmentManager = getFragmentManager();
-                FragmentCalibrate fragmentCalibrate = new FragmentCalibrate();
+                fragmentCalibrate = new FragmentCalibrate();
                 FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
                 fragmentTransaction.replace(android.R.id.content, fragmentCalibrate);
                 fragmentTransaction.commit();
@@ -173,10 +180,6 @@ public class Sleep extends BlunoLibrary {
                 buttonScan.setText("Connecting");
                 break;
             case isToScan:
-                if(connected)
-                {
-                    //createPlot();
-                }
                 buttonScan.setText("Scan");
                 connected = false;
                 break;
@@ -194,7 +197,30 @@ public class Sleep extends BlunoLibrary {
     @Override
     public void onSerialReceived(String theString)
     {
-        try
+        if(calibrating)
+        {
+            if (calibrationStarted)
+            {
+                if (theString.equals("m"))
+                {
+                    FragmentManager fragmentManager = getFragmentManager();
+                    fragmentMeasure = new FragmentMeasure();
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    fragmentTransaction.replace(android.R.id.content, fragmentMeasure);
+                    fragmentTransaction.commit();
+                }
+                else
+                {
+                    fragmentCalibrate.setAmbientText(theString);
+                }
+            }
+
+            if (theString.equals("c"))
+            {
+                calibrationStarted = true;
+            }
+        }
+        else if (measuring)
         {
             s = theString.substring(theString.indexOf("s") + 1, theString.indexOf("a"));
             a = theString.substring(theString.indexOf("a") + 1);
@@ -204,118 +230,76 @@ public class Sleep extends BlunoLibrary {
                 xyValueArray_s.add(new XYValue(count, (int) ((Float.parseFloat(s) / 10000f) * 100f)));
                 s = Integer.toString((int) ((Float.parseFloat(s) / 10000f) * 100f));
             }
+            else
+            {
+                xyValueArray_s.add(new XYValue(count, 0));
+                s = "0";
+            }
             if (Integer.parseInt(a) > 0)
             {
                 xyValueArray_a.add(new XYValue(count, (int) ((Float.parseFloat(a) / 10000f) * 100f)));
                 a = Integer.toString((int) ((Float.parseFloat(a) / 10000f) * 100f));
             }
+            else
+            {
+                xyValueArray_a.add(new XYValue(count, 0));
+                a = "0";
+            }
 
             count++;
 
-            snoreScore.setText(s + "%");
-            apneaScore.setText(a + "%");
+            fragmentMeasure.setTextSnore(s + "%");
+            fragmentMeasure.setTextApnea(a + "%");
         }
-        catch(Exception e)
-        {
-
-        }
-    }
-
-    private void createPlot()
-    {
-        mLinePlot.removeAllSeries();
-        xyValueArray_s = sortArray(xyValueArray_s);
-        xyValueArray_a = sortArray(xyValueArray_a);
-
-        for(int i = 0; i < xyValueArray_s.size(); i++)
-        {
-            double x = xyValueArray_s.get(i).getX();
-            double y = xyValueArray_s.get(i).getY();
-            xySeries_s.appendData(new DataPoint(x, y), true, 1000);
-        }
-        for(int i = 0; i < xyValueArray_a.size(); i++)
-        {
-            double x = xyValueArray_a.get(i).getX();
-            double y = xyValueArray_a.get(i).getY();
-            xySeries_a.appendData(new DataPoint(x, y), true, 1000);
-        }
-
-        xySeries_s.setShape(PointsGraphSeries.Shape.POINT);
-        xySeries_s.setColor(Color.rgb(112, 112, 244));
-        xySeries_s.setSize(5f);
-
-        xySeries_a.setShape(PointsGraphSeries.Shape.POINT);
-        xySeries_a.setColor(Color.rgb(244, 112, 112));
-        xySeries_a.setSize(5f);
-
-        //set Scrollable and Scaleable
-        mLinePlot.getViewport().setScalable(true);
-        mLinePlot.getViewport().setScalableY(false);
-        mLinePlot.getViewport().setScrollable(true);
-        mLinePlot.getViewport().setScrollableY(false);
-
-        mLinePlot.getViewport().setMinY(0);
-        mLinePlot.getViewport().setMaxY(100);
-        mLinePlot.getViewport().setYAxisBoundsManual(true);
-
-        mLinePlot.getViewport().setMinX(0);
-        mLinePlot.getViewport().setMaxX(count);
-        mLinePlot.getViewport().setXAxisBoundsManual(true);
-
-        mLinePlot.addSeries(xySeries_s);
-        mLinePlot.addSeries(xySeries_a);
-    }
-
-    private ArrayList<XYValue> sortArray(ArrayList<XYValue> array){
-        /*
-        //Sorts the xyValues in Ascending order to prepare them for the PointsGraphSeries<DataSet>
-         */
-        int factor = Integer.parseInt(String.valueOf(Math.round(Math.pow(array.size(),2))));
-        int m = array.size() - 1;
-        int count = 0;
-
-
-        while (true) {
-            m--;
-            if (m <= 0) {
-                m = array.size() - 1;
-            }
-            try {
-                //print out the y entrys so we know what the order looks like
-                //Log.d(TAG, "sortArray: Order:");
-                //for(int n = 0;n < array.size();n++){
-                //Log.d(TAG, "sortArray: " + array.get(n).getY());
-                //}
-                double tempY = array.get(m - 1).getY();
-                double tempX = array.get(m - 1).getX();
-                if (tempX > array.get(m).getX()) {
-                    array.get(m - 1).setY(array.get(m).getY());
-                    array.get(m).setY(tempY);
-                    array.get(m - 1).setX(array.get(m).getX());
-                    array.get(m).setX(tempX);
-                } else if (tempX == array.get(m).getX()) {
-                    count++;
-                } else if (array.get(m).getX() > array.get(m - 1).getX()) {
-                    count++;
-                }
-                //break when factorial is done
-                if (count == factor) {
-                    break;
-                }
-            } catch (ArrayIndexOutOfBoundsException e) {
-                e.getMessage();
-                break;
-            }
-        }
-        return array;
     }
 
     @Override
     public void onBackPressed()
     {
+        scanning = false;
+        calibrating = false;
+        calibrationStarted = false;
+        measuring = false;
         Intent homeIntent = new Intent(Sleep.this, Home.class);
         startActivity(homeIntent);
         finish();
+    }
+
+    public void openResultsActivity()
+    {
+        scanning = false;
+        calibrating = false;
+        calibrationStarted = false;
+        measuring = false;
+
+        String date = Calendar.getInstance().getTime().toString();
+
+        Gson gson_s = new Gson();
+        String s_String = gson_s.toJson(xyValueArray_s);
+
+        Gson gson_a = new Gson();
+        String a_String = gson_a.toJson(xyValueArray_a);
+
+        AddData(date, s_String, a_String);
+
+        Intent resultsIntent = new Intent(Sleep.this, Results.class);
+        resultsIntent.putExtra("ID", -1);
+        startActivity(resultsIntent);
+        finish();
+    }
+
+    public void AddData(String date_string, String s_string, String a_string)
+    {
+        boolean insertData = mDatabaseHelper.addData(date_string, s_string, a_string);
+
+        if(insertData)
+        {
+            Toast.makeText(this, "Record Saved :D", Toast.LENGTH_SHORT).show();
+        }
+        else
+        {
+            Toast.makeText(this, "Something Went Wrong D:", Toast.LENGTH_SHORT).show();
+        }
     }
 
 }

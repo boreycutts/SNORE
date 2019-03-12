@@ -40,32 +40,28 @@
                 android:layout_gravity=""/>
         </LinearLayout>
     </LinearLayout>
-    <ScrollView
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="10dp" />
+        <Button
+            android:id="@+id/button_sleep"
+            android:layout_width="375dp"
+            android:layout_height="70dp"
+            android:text="Start Sleeping"
+            android:textColor="@color/colorAccent"
+            android:background="@drawable/button_border"/>
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="40dp" />
+    </LinearLayout>
+    <ListView
+        android:id="@+id/list_records"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center_horizontal">
-            <Space
-                android:layout_width="match_parent"
-                android:layout_height="10dp" />
-            <Button
-                android:id="@+id/button_sleep"
-                android:layout_width="375dp"
-                android:layout_height="70dp"
-                android:text="Start Sleeping"
-                android:textColor="@color/colorAccent"
-                android:background="@drawable/button_border"/>
-            <Space
-                android:layout_width="wrap_content"
-                android:layout_height="40dp" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/colorAccent"
-                android:text="Nothing here yet. Start sleeping to add some logs :D"/>
-        </LinearLayout>
-    </ScrollView>
+    </ListView>
 </LinearLayout>
