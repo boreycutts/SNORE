@@ -225,6 +225,8 @@ public class Sleep extends BlunoLibrary {
             s = theString.substring(theString.indexOf("s") + 1, theString.indexOf("a"));
             a = theString.substring(theString.indexOf("a") + 1);
 
+            Date date = new Date();
+
             if (Integer.parseInt(s) > 0)
             {
                 xyValueArray_s.add(new XYValue(count, (int) ((Float.parseFloat(s) / 10000f) * 100f)));

@@ -52,7 +52,7 @@ public class Home extends AppCompatActivity {
         }
 
         ListView listView = (ListView) findViewById(R.id.list_records);
-        ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_expandable_list_item_1, records);
+        ArrayAdapter adapter = new ArrayAdapter(this, R.layout.list_home, records);
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
