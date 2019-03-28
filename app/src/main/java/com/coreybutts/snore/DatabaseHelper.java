@@ -55,6 +55,21 @@ public class DatabaseHelper extends SQLiteOpenHelper
         }
     }
 
+    public Boolean deleteData(String id)
+    {
+        SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
+        long result = sqLiteDatabase.delete(TABLE_NAME, "ID = ?", new String[] {id});
+
+        if(result == -1)
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
     public Cursor getData(String extra)
     {
         SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
