@@ -27,7 +27,7 @@ public class Home extends AppCompatActivity {
     Button buttonSleep;
 
     DatabaseHelper mDatabaseHelper;
-
+    ArrayList<String> records = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +47,7 @@ public class Home extends AppCompatActivity {
 
         mDatabaseHelper = new DatabaseHelper(this);
 
-        ArrayList<String> records = new ArrayList<>();
+
 
         Cursor data = mDatabaseHelper.getData("");
         while(data.moveToNext())
@@ -68,7 +68,7 @@ public class Home extends AppCompatActivity {
             }
         });*/
 
-        SwipeMenuListView listView = (SwipeMenuListView) findViewById(R.id.listView);
+        final SwipeMenuListView listView = (SwipeMenuListView) findViewById(R.id.listView);
 
         final ArrayAdapter adapter = new ArrayAdapter(this, R.layout.list_home, records);
         listView.setAdapter(adapter);
@@ -111,9 +111,24 @@ public class Home extends AppCompatActivity {
                 switch (index) {
                     case 0:
                         // delete
-                        mDatabaseHelper.deleteData(Integer.toString(position));
+                        Cursor data = mDatabaseHelper.getData("");
+                        data.moveToFirst();
+                        int i = 0;
+                        while(i < position) {
+                            data.moveToNext();
+                            i++;
+                        }
+                        mDatabaseHelper.deleteData(data.getString(0));
+                        adapter.clear();
+                        data = mDatabaseHelper.getData("");
+                        data.moveToFirst();
+                        adapter.add(data.getString(1));
+                        while(data.moveToNext())
+                        {
+                            adapter.add(data.getString(1));
+                        }
                         adapter.notifyDataSetChanged();
-                        break;
+                        return false;
                 }
                 // false : close the menu; true : not close the menu
                  return false;

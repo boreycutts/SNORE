@@ -6,6 +6,7 @@ bool apnea = false, calibrated = false;
 unsigned long t_start, t_stop, snore_score = 0, apnea_score = 0, last_score = 0;
 char message[20];
 char a[5], s[5];
+byte data[20];
 
 void setup() 
 {
@@ -52,10 +53,6 @@ void loop()
           count_3 = 0;
         }
         delay(1);
-        /*Serial.print("SNORE: ");
-        Serial.print(snore);
-        Serial.print("  ");
-        Serial.println(millis() - t_start);*/
       }
       
       t_stop = millis();
@@ -95,14 +92,6 @@ void loop()
     {
       apnea_score -= 1;
     }
-    /*Serial.print("s:");
-    Serial.print(snore_score);
-    Serial.print("a");
-    Serial.print(apnea_score);*/
-    
-    /*message = "s" + snore_score;
-    message += "a";
-    message += apnea_score;*/
 
     count2++;
     if(count2 > 700)
