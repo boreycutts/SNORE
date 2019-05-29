@@ -1,7 +1,21 @@
 # Screenshots
+## Splash Screen
+![splash](/screenshots/splash.jpg)
+
+## Home Page
 ![home](/screenshots/home.jpg)
-![home](/screenshots/scan.jpg)
-![home](/screenshots/calibrate.jpg)
-![home](/screenshots/sleep.jpg)
-![home](/screenshots/results.jpg)
-![home](/screenshots/home_w_data.jpg)
+
+## Bluetooth Scan Page
+![scan](/screenshots/scan.jpg)
+
+## Sensor Calibration Page
+![calibrate](/screenshots/calibrate.jpg)
+
+## Sleep Start Page
+![sleep](/screenshots/sleep.jpg)
+
+## Results Page
+![results](/screenshots/results.jpg)
+
+## Home Page with Data
+![home_w_data](/screenshots/home_w_data.jpg)
