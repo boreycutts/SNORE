@@ -28,7 +28,7 @@ public class Home extends AppCompatActivity {
     Button buttonSleep;
 
     DatabaseHelper mDatabaseHelper;
-
+    ArrayList<String> records = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +71,7 @@ public class Home extends AppCompatActivity {
             }
         });*/
 
-        SwipeMenuListView listView = (SwipeMenuListView) findViewById(R.id.listView);
+        final SwipeMenuListView listView = (SwipeMenuListView) findViewById(R.id.listView);
 
         final ArrayAdapter adapter = new ArrayAdapter(this, R.layout.list_home, records);
         listView.setAdapter(adapter);
