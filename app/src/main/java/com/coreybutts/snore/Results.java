@@ -1,6 +1,7 @@
 package com.coreybutts.snore;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
@@ -11,6 +12,10 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.reflect.TypeToken;
 import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.GridLabelRenderer;
+import com.jjoe64.graphview.LabelFormatter;
+import com.jjoe64.graphview.Viewport;
+import com.jjoe64.graphview.helper.StaticLabelsFormatter;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.PointsGraphSeries;
 
@@ -26,6 +31,7 @@ public class Results extends AppCompatActivity
 {
     ArrayList<XYValue> xyValueArray_s;
     ArrayList<XYValue> xyValueArray_a;
+    ArrayList<String> timestamps_arraylist;
     PointsGraphSeries<DataPoint> xySeries_s;
     PointsGraphSeries<DataPoint> xySeries_a;
     GraphView mLinePlot;
@@ -35,6 +41,7 @@ public class Results extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
+        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_results);
 
@@ -68,6 +75,7 @@ public class Results extends AppCompatActivity
         Type listType = new TypeToken<ArrayList<XYValue>>(){}.getType();
         xyValueArray_s = new Gson().fromJson(data.getString(2), listType);
         xyValueArray_a = new Gson().fromJson(data.getString(3), listType);
+        timestamps_arraylist = new Gson().fromJson(data.getString(4), new TypeToken<ArrayList<String>>(){}.getType());
 
         mLinePlot =(GraphView) findViewById(R.id.line_plot);
         /*xyValueArray_s = (ArrayList<XYValue>) getIntent().getSerializableExtra("xyValueArray_s");
@@ -88,6 +96,32 @@ public class Results extends AppCompatActivity
         mLinePlot.getGridLabelRenderer().setVerticalAxisTitleColor(Color.rgb(255,255,255));
         mLinePlot.setTitle("Your Sleep History");
         mLinePlot.setTitleColor(Color.rgb(255,255,255));
+
+        if (xyValueArray_s.size() > 100)
+        {
+            ArrayList<XYValue> xyValueArray_s_new = new ArrayList<>();
+            ArrayList<XYValue> xyValueArray_a_new = new ArrayList<>();
+            ArrayList<String> timestamps_new = new ArrayList<>();
+            int count = 0;
+            for(int i = 0; i < xyValueArray_a.size(); i += xyValueArray_a.size()/100)
+            {
+                if(i < xyValueArray_a.size())
+                {
+                    count++;
+                    xyValueArray_a_new.add(xyValueArray_a.get(i));
+                    xyValueArray_s_new.add(xyValueArray_s.get(i));
+                    if(count >= 20)
+                    {
+                        count = 0;
+                        timestamps_new.add(timestamps_arraylist.get(i));
+                    }
+                }
+            }
+
+            xyValueArray_a = xyValueArray_a_new;
+            xyValueArray_s = xyValueArray_s_new;
+            //timestamps_arraylist = timestamps_new;
+        }
 
         createPlot();
     }
@@ -135,6 +169,30 @@ public class Results extends AppCompatActivity
 
         mLinePlot.addSeries(xySeries_s);
         mLinePlot.addSeries(xySeries_a);
+
+        StaticLabelsFormatter staticLabelsFormatter = new StaticLabelsFormatter(mLinePlot);
+        final String[] timestamps = timestamps_arraylist.toArray(new String[0]);
+        mLinePlot.getGridLabelRenderer().setLabelFormatter(new LabelFormatter() {
+            @Override
+            public String formatLabel(double value, boolean isValueX) {
+                if(isValueX) {
+                    return timestamps[(int) value];
+                }
+                else
+                {
+                    return String.format("%d", (int) value);
+                }
+            }
+
+            @Override
+            public void setViewport(Viewport viewport) {
+
+            }
+        });
+        /*staticLabelsFormatter.setHorizontalLabels(timestamps);
+        mLinePlot.getGridLabelRenderer().setLabelFormatter(staticLabelsFormatter);*/
+        GridLabelRenderer renderer = mLinePlot.getGridLabelRenderer();
+        renderer.setHorizontalLabelsAngle(45);
     }
 
     private ArrayList<XYValue> sortArray(ArrayList<XYValue> array){

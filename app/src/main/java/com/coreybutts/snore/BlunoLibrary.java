@@ -325,7 +325,14 @@ public abstract  class BlunoLibrary extends Activity {
 					}
             	}
             	else if (mSCharacteristic==mSerialPortCharacteristic) {
-            		onSerialReceived(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
+            		try
+					{
+						onSerialReceived(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
+					}
+					catch(Exception e)
+					{
+
+					}
 				}
             	
             

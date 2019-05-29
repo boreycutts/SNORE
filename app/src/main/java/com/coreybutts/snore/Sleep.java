@@ -26,6 +26,7 @@ import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.PointsGraphSeries;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Calendar;
@@ -60,6 +61,9 @@ public class Sleep extends BlunoLibrary {
     FragmentMeasure fragmentMeasure = new FragmentMeasure();
 
     DatabaseHelper mDatabaseHelper;
+
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("hh:mm:ss");
+    ArrayList<String> timestamps = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -225,7 +229,8 @@ public class Sleep extends BlunoLibrary {
             s = theString.substring(theString.indexOf("s") + 1, theString.indexOf("a"));
             a = theString.substring(theString.indexOf("a") + 1);
 
-            Date date = new Date();
+
+            timestamps.add(simpleDateFormat.format(new Date()));
 
             if (Integer.parseInt(s) > 0)
             {
@@ -258,13 +263,20 @@ public class Sleep extends BlunoLibrary {
     @Override
     public void onBackPressed()
     {
-        scanning = false;
-        calibrating = false;
-        calibrationStarted = false;
-        measuring = false;
-        Intent homeIntent = new Intent(Sleep.this, Home.class);
-        startActivity(homeIntent);
-        finish();
+        if(measuring)
+        {
+            openResultsActivity();
+        }
+        else
+        {
+            scanning = false;
+            calibrating = false;
+            calibrationStarted = false;
+            measuring = false;
+            Intent homeIntent = new Intent(Sleep.this, Home.class);
+            startActivity(homeIntent);
+            finish();
+        }
     }
 
     public void openResultsActivity()
@@ -276,13 +288,87 @@ public class Sleep extends BlunoLibrary {
 
         String date = Calendar.getInstance().getTime().toString();
 
+        /* FAKE DATA
+
+        xyValueArray_a = new ArrayList<>();
+        xyValueArray_s = new ArrayList<>();
+        timestamps = new ArrayList<>();
+
+        Date timestamp;
+        int count = 0;
+        for(int h = 0; h < 4; h++)
+        {
+            for(int m = 0; m < 60; m++)
+            {
+                for(int s = 0; s < 60; s++)
+                {
+                    xyValueArray_a.add(new XYValue(count - 1000, 0));
+                    xyValueArray_s.add(new XYValue(count - 1000, 0));
+                    timestamp = new Date();
+                    timestamp.setHours(h + 15);
+                    timestamp.setMinutes(m);
+                    timestamp.setSeconds(s);
+                    timestamps.add(simpleDateFormat.format(timestamp));
+                    count++;
+                }
+            }
+        }
+
+        for(int i = 0; i <= 1000; i++)
+        {
+            xyValueArray_s.remove(0);
+            xyValueArray_a.remove(0);
+            timestamps.remove(0);
+        }
+
+        FakeData(1000, 8);
+        FakeData(1010, 26);
+        FakeData(1030, 56);
+        FakeData(1040, 56);
+        FakeData(1050, 96);
+        for( int i = 1055; i < 12090; i++)
+        {
+            XYValue value = xyValueArray_s.get(i);
+            if(Math.random() < 0.5)
+            {
+                value.setY(100);
+                xyValueArray_s.set(i, value);
+            }
+            else
+            {
+                value.setY(90 + (int)(Math.random() * ((95 - 90) + 1)));
+                xyValueArray_s.set(i, value);
+                value = xyValueArray_a.get(i);
+                value.setY(0 + (int)(Math.random() * ((10 - 0) + 1)));
+                xyValueArray_a.set(i, value);
+            }
+
+        }
+        FakeData(444, 14);
+        FakeData(9456, 10);
+        for( int i = 13000; i < 13200; i++) {
+            XYValue value = xyValueArray_a.get(i);
+            value.setY(100);
+            xyValueArray_a.set(i, value);
+        }
+        AFakeData(13201, 100);
+
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(2019, 4, 11, 15, 16, 32);
+        date = calendar.getTime().toString();
+        /* ***********/
+
         Gson gson_s = new Gson();
         String s_String = gson_s.toJson(xyValueArray_s);
 
         Gson gson_a = new Gson();
         String a_String = gson_a.toJson(xyValueArray_a);
 
-        AddData(date, s_String, a_String);
+        Gson gson_t = new Gson();
+        String t_String = gson_a.toJson(timestamps);
+
+        AddData(date, s_String, a_String, t_String);
 
         Intent resultsIntent = new Intent(Sleep.this, Results.class);
         resultsIntent.putExtra("ID", -1);
@@ -290,9 +376,39 @@ public class Sleep extends BlunoLibrary {
         finish();
     }
 
-    public void AddData(String date_string, String s_string, String a_string)
+    void FakeData(int index, int number)
     {
-        boolean insertData = mDatabaseHelper.addData(date_string, s_string, a_string);
+        XYValue value = xyValueArray_s.get(index);
+        value.setY(number);
+        xyValueArray_s.set(index, value);
+
+        for(int i = index + 1; number > 0; i++)
+        {
+            value = xyValueArray_s.get(i);
+            value.setY(number);
+            xyValueArray_s.set(i, value);
+            number--;
+        }
+    }
+
+    void AFakeData(int index, int number)
+    {
+        XYValue value = xyValueArray_a.get(index);
+        value.setY(number);
+        xyValueArray_a.set(index, value);
+
+        for(int i = index + 1; number > 0; i++)
+        {
+            value = xyValueArray_a.get(i);
+            value.setY(number);
+            xyValueArray_a.set(i, value);
+            number--;
+        }
+    }
+
+    public void AddData(String date_string, String s_string, String a_string, String t_string)
+    {
+        boolean insertData = mDatabaseHelper.addData(date_string, s_string, a_string, t_string);
 
         if(insertData)
         {

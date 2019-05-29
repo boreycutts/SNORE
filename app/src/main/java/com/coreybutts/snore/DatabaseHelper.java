@@ -11,10 +11,11 @@ import org.w3c.dom.Text;
 public class DatabaseHelper extends SQLiteOpenHelper
 {
     private static final String TAG = "DatabaseHelper";
-    private static final String TABLE_NAME = "records";
+    private static final String TABLE_NAME = "sleep_records";
     private static final String COL0 = "date";
     private static final String COL1 = "data_s";
     private static final String COL2 = "data_a";
+    private static final String COL3 = "timestamps";
 
     public DatabaseHelper(Context context)
     {
@@ -24,7 +25,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase)
     {
-        String createTable = "CREATE TABLE " + TABLE_NAME + " (ID INTEGER PRIMARY KEY AUTOINCREMENT, " + COL0 + " TEXT, " + COL1 + " TEXT, " + COL2 + " TEXT)";
+        String createTable = "CREATE TABLE " + TABLE_NAME + " (ID INTEGER PRIMARY KEY AUTOINCREMENT, " + COL0 + " TEXT, " + COL1 + " TEXT, " + COL2 + " TEXT, " + COL3 + " TEXT)";
         sqLiteDatabase.execSQL(createTable);
     }
 
@@ -35,13 +36,14 @@ public class DatabaseHelper extends SQLiteOpenHelper
         onCreate(sqLiteDatabase);
     }
 
-    public boolean addData(String date, String item_s, String item_a)
+    public boolean addData(String date, String item_s, String item_a, String item_t)
     {
         SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COL0, date);
         contentValues.put(COL1, item_s);
         contentValues.put(COL2, item_a);
+        contentValues.put(COL3, item_t);
 
         long result = sqLiteDatabase.insert(TABLE_NAME, null, contentValues);
 

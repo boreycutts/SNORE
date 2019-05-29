@@ -21,6 +21,7 @@ import com.baoyz.swipemenulistview.SwipeMenuCreator;
 import com.baoyz.swipemenulistview.SwipeMenuItem;
 import com.baoyz.swipemenulistview.SwipeMenuListView;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class Home extends AppCompatActivity {
@@ -48,11 +49,13 @@ public class Home extends AppCompatActivity {
         mDatabaseHelper = new DatabaseHelper(this);
 
         ArrayList<String> records = new ArrayList<>();
+        final ArrayList<String> ids = new ArrayList<>();
 
         Cursor data = mDatabaseHelper.getData("");
         while(data.moveToNext())
         {
             records.add(data.getString(1));
+            ids.add(data.getString(0));
         }
 
         /*ListView listView = (ListView) findViewById(R.id.list_records);
@@ -111,8 +114,10 @@ public class Home extends AppCompatActivity {
                 switch (index) {
                     case 0:
                         // delete
-                        mDatabaseHelper.deleteData(Integer.toString(position));
-                        adapter.notifyDataSetChanged();
+                        int new_pos = Integer.parseInt(ids.get(position));
+                        mDatabaseHelper.deleteData(Integer.toString(new_pos));
+                        finish();
+                        startActivity(getIntent());
                         break;
                 }
                 // false : close the menu; true : not close the menu
